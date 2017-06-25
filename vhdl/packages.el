@@ -1,10 +1,9 @@
-;;(require 'vhdl-state)
 ;; pckages.el --- vhdl layer packages file for Spacemacs.
 ;;
-;; Copyright (c) 2012-2016 Sylvain Benner & Contributors
+;; Copyright (c) 2012-2016 Ole P. Orhagen
 ;;
 ;; Author: Ole Petter <olepor@Oles-MBP>
-;; URL: https://github.com/syl20bnr/spacemacs
+;; URL: https://github.com/olepor/spacemacs
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -33,7 +32,7 @@
 (defconst vhdl-packages
   '(
     vhdl-mode
-    vhdl-state
+    (vhdl-state :location local)
     )
   "The list of Lisp packages required by the vhdl layer.
 
@@ -75,29 +74,51 @@ Each entry is either:
   (message "Updating local keymap")
   (evil-define-key 'normal evil-normal-state-local-map "p" 'test-print))
 
-(defun update-normal-state-map ()
-  (message "Initialising normal-state-map to add emacs-state key to \\")
-  (define-key evil-normal-state-map "|" 'evil-vhdl-state))
+(defun toggle-vhdl-state ()
+  "Toggle vhdl-state on/off"
+  (interactive)
+  (if (eq 'vhdl 'evil-state)
+      (progn
+        (message "State: vhdl -> normal")
+        (evil-force-normal-state))
+    (evil-vhdl-state)))
+
+(defun update-local-vhdl-keymap ()
+  (message "Adding yank-test to the evil-normal-state-local-map")
+  (define-key evil-normal-state-local-map "p" 'spacemacs/vhdl-paste-transient-state/evil-paste-after))
 
 (defun vhdl/init-vhdl-mode ()
   (use-package vhdl-mode
     :defer t
     :init
     (message "intialising vhdl-layer")
+    (add-hook 'vhdl-mode-hook 'update-local-vhdl-keymap)
+    ;; (push "~/.layers/evil-states/" load-path)
     :config
-    (add-hook 'vhdl-mode-hook 'update-local-keymap)
-    (add-hook 'vhdl-mode-hook 'update-normal-state-map)
+    ;; (add-hook 'vhdl-mode-hook 'update-local-keymap)
+    (bind-map evil-vhdl-mode-state-map
+      :evil-keys (",")
+      :major-modes (vhdl-mode)
+      :bindings
+      ("," 'toggle-vhdl-state))
+    ;; (use-package vhdl-state)
     ;; (evil-define-key 'operator vhdl-mode-map "p" 'vhdl-port-copy)
     ;; (evil-define-key 'motion vhdl-mode-map "p" 'vhdl-port-copy)
     ;; (evil-define-key 'motion evil-normal-state-local-map "p" 'vhdl-port-copy)
     (message "Configuring vhdl-mode")
   ))
 
+(defun vhdl/init-vhdl-state ()
+  :defer t
+  :init
+  (push "~/.layers/evil-states/" load-path) ;; Ugly. Can't make it work otherwise.
+  (use-package vhdl-state)
+  (message "Initialising vhdl-state")
+  :config
+  (message "Configuring vhdl-state"))
+
 (defun vhdl/post-init-company ()
   (push 'company-capf company-backends-vhdl-mode)
   )
-
-(defun vhdl/init-vhdl-state ()
-  (test-print))
 
 ;;; packages.el ends here
